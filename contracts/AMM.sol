@@ -13,6 +13,10 @@ contract AMM {
 	uint256 public token2Balance;
 	uint256 public K;
 
+	uint256 public totalShares;
+	mapping(address => uint256) public shares;
+	uint256 constant PRECISION = 10**18;
+
 	constructor(Token _token1, Token _token2) {
 		token1 = _token1;
 		token2 = _token2;
@@ -29,10 +33,49 @@ contract AMM {
 			"failed to transfer token 2"
 		);
 
+		// Issue shares
+		uint256 share;
+
+		// If first time adding liquidity, make share 100
+		if (totalShares == 0) {
+			share = 100 * PRECISION;
+		} else {
+			uint256 share1 = (totalShares * _token1Amount) / token1Balance;
+			uint256 share2 = (totalShares * _token2Amount) / token2Balance;
+			require(
+				(share1 / 10**3) == (share2 / 10**3), // this is rounding to 3 decimal places so there's more leeway.
+				"must provide equal share amounts"
+			);
+			share = share1; // assuming share1 and share2 are equal, which is required, otherwise diff coding required??
+		}
+
+		// Manage Pool
 		token1Balance += _token1Amount;
 		token2Balance += _token2Amount;
 		K = token1Balance * token2Balance;
 
+		// Update Shares
+		totalShares += share;
+		shares[msg.sender] += share;
+	}
+
+	// Determine how many token2 tokens must be deposited when depositing liquidity for token1
+
+	function calculateToken2Deposit(uint256 _token1Amount)
+		public
+		view
+		returns(uint256 token2Amount)
+	{
+		token2Amount = (token2Balance * _token1Amount) / token1Balance;
+	}
+
+	// Determine how many token1 tokens must be deposited when depositing liquidity for token2
+	function calculateToken1Deposit(uint256 _token2Amount)
+		public
+		view
+		returns(uint256 token1Amount)
+	{
+		token1Amount = (token1Balance * _token2Amount) / token2Balance;
 	}
 
 }
