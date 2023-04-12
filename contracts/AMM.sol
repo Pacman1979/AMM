@@ -17,6 +17,17 @@ contract AMM {
 	mapping(address => uint256) public shares;
 	uint256 constant PRECISION = 10**18;
 
+	event Swap(
+		address user,
+		address tokenGive,
+		uint256 tokenGiveAmount,
+		address tokenGet,
+		uint256 tokenGetAmount,
+		uint256 token1Balance,
+		uint256 token2Balance,
+		uint256 timestamp
+	);
+
 	constructor(Token _token1, Token _token2) {
 		token1 = _token1;
 		token2 = _token2;
@@ -78,4 +89,61 @@ contract AMM {
 		token1Amount = (token1Balance * _token2Amount) / token2Balance;
 	}
 
+	function calculateToken1Swap(uint256 _token1Amount)
+		public
+		view
+		returns(uint256 token2Amount)
+	{
+		// Calculate token 2 amount...
+		uint256 token1After = token1Balance + _token1Amount;
+		uint256 token2After = K / token1After; // Because this is Y=K/X from X*Y=K where Y=token2 and X=token1
+		token2Amount = token2Balance - token2After;
+
+		//Dont let pool go to 0
+		if(token2Amount == token2Balance) {
+			token2Amount--;
+		}
+
+		require(token2Amount < token2Balance, "swap cannot exceed pool balance");
+	}
+
+	function swapToken1(uint256 _token1Amount)
+		external
+		returns(uint256 token2Amount)
+	{
+		// Calculate token 2 amount
+		token2Amount = calculateToken1Swap(_token1Amount);
+
+		// Do swap
+		// 1. Transfer token1 tokens out of user wallet to contract
+		token1.transferFrom(msg.sender, address(this), _token1Amount);
+		// 2. Update the token1 balance in the contract
+		token1Balance += _token1Amount;
+		// 3. Update the token2 balance
+		token2Balance -= token2Amount;
+		// 4. Transfer token2 tokens from contract to user wallet
+		token2.transfer(msg.sender, token2Amount);
+
+		// Emit an event
+		emit Swap(
+			msg.sender,
+			address(token1),
+			_token1Amount,
+			address(token2),
+			token2Amount,
+			token1Balance,
+			token2Balance,
+			block.timestamp
+		);
+	}
+
+	// function swapToken2(uint256 _token2Amount)
+	// 	external
+	// 	returns(uint256 token1Amount)
+	// {
+	// 	// Calculate token 1 amount...
+	// 	uint256 token2After = token2Balance + _token2Amount;
+	// 	uint256 token1After = K / token2After; // Because this is X=K/Y from X*Y=K where Y=token2 and X=token1
+	// 	token1Amount = token1Balance - token1After;
+	// }
 }
