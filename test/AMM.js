@@ -99,7 +99,6 @@ describe('AMM', () => {
       console.log(`K value from token1 x token2: ${(k)}\n`)
 	    // console.log(`Investor1 Token2 balance after swap: ${ethers.utils.formatEther(balance)}\n`)
 
-
       // check deployer has 100 shares
       expect(await amm.shares(deployer.address)).to.equal(tokens(100)) // use tokens helper to calculate shares
 
@@ -109,6 +108,7 @@ describe('AMM', () => {
 	    ////////////////////////////////////////////////////////////
 	    // LP adds more Liquidity
 	    //
+
 	    // LP approves 50k tokens...
 	    amount = tokens(50000)
 	    transaction = await token1.connect(liquidityProvider).approve(amm.address, amount)
@@ -133,10 +133,10 @@ describe('AMM', () => {
 	    // Pool should now have 150 shares
 	    expect(await amm.totalShares()).to.equal(tokens(150))
 
-
 	    ////////////////////////////////////////////////////////////
 	    // Investor 1 swaps
 	    //
+
 	    // Check price before swapping
 	    console.log(`Price: ${await amm.token2Balance() / await amm.token1Balance()} \n`)
 
