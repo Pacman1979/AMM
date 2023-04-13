@@ -1,15 +1,23 @@
 import { useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux'
+import { HashRouter, Routes, Route } from 'react-router-dom'
 import { Container } from 'react-bootstrap'
 import { ethers } from 'ethers'
 
 // Components
 import Navigation from './Navigation';
+// import Tabs from './Tabs';
+// import Swap from './Swap';
+// import Deposit from './Deposit';
+// import Withdraw from './Withdraw';
+// import Charts from './Charts';
 
 import {
   loadProvider,
   loadNetwork,
-  loadAccount
+  loadAccount,
+  loadTokens,
+  loadAMM
 } from '../store/interactions'
 
 function App() {
@@ -34,8 +42,8 @@ function App() {
     })
 
     // Initiate contracts
-    // await loadTokens(provider, chainId, dispatch)
-    // await loadAMM(provider, chainId, dispatch)
+    await loadTokens(provider, chainId, dispatch)
+    await loadAMM(provider, chainId, dispatch)
   }
 
   useEffect(() => {
@@ -44,21 +52,21 @@ function App() {
 
   return(
     <Container>
-      // <HashRouter>
+      <HashRouter>
 
         <Navigation />
 
         <hr />
 
-        // <Tabs />
+        <Tabs />
 
-        // <Routes>
-      //     <Route exact path="/" element={<Swap />} />
-      //     <Route path="/deposit" element={<Deposit />} />
-      //     <Route path="/withdraw" element={<Withdraw />} />
-      //     <Route path="/charts" element={<Charts />} />
-      //   </Routes>
-      // </HashRouter>
+        <Routes>
+          // <Route exact path="/" element={<Swap />} />
+          // <Route path="/deposit" element={<Deposit />} />
+          // <Route path="/withdraw" element={<Withdraw />} />
+          // <Route path="/charts" element={<Charts />} />
+        </Routes>
+      </HashRouter>
     </Container>
   )
 }
