@@ -12,7 +12,7 @@ export const amm = createSlice({
       state.contracts = action.payload
     },
     sharesLoaded: (state, action) => {
-      state.shares = action,payload
+      state.shares = action.payload
     }
   }
 })
