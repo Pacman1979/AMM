@@ -6,11 +6,11 @@ import { ethers } from 'ethers'
 
 // Components
 import Navigation from './Navigation';
-// import Tabs from './Tabs';
-// import Swap from './Swap';
-// import Deposit from './Deposit';
-// import Withdraw from './Withdraw';
-// import Charts from './Charts';
+import Tabs from './Tabs';
+import Swap from './Swap';
+import Deposit from './Deposit';
+import Withdraw from './Withdraw';
+import Charts from './Charts';
 
 import {
   loadProvider,

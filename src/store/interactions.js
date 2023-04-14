@@ -13,7 +13,8 @@ import {
 } from './reducers/tokens'
 
 import {
-  setContract
+  setContract,
+  sharesLoaded
 }	from './reducers/amm'
 
 import TOKEN_ABI from '../abis/Token.json';
