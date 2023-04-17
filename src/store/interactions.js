@@ -1,3 +1,5 @@
+// load info from the Blockchain but also for triggering transactions e.g. Swap.
+
 import { ethers } from 'ethers'
 
 import {
@@ -8,14 +10,24 @@ import {
 
 import {
   setContracts,
-	setSymbols,
-	balancesLoaded
+  setSymbols,
+  balancesLoaded
 } from './reducers/tokens'
 
 import {
-  setContract,
-  sharesLoaded
-}	from './reducers/amm'
+  setContract, // Reducers from amm.js
+  sharesLoaded,
+  swapsLoaded,
+  depositRequest,
+  depositSuccess,
+  depositFail,
+  withdrawRequest,
+  withdrawSuccess,
+  withdrawFail,
+  swapRequest,
+  swapSuccess,
+  swapFail
+} from './reducers/amm'
 
 import TOKEN_ABI from '../abis/Token.json';
 import AMM_ABI from '../abis/AMM.json';
@@ -40,7 +52,7 @@ export const loadAccount = async (dispatch) => {
   const account = ethers.utils.getAddress(accounts[0])
   dispatch(setAccount(account))
 
-  return accounts
+  return account
 }
 
 // ------------------------------------------------------------------------------
@@ -61,6 +73,7 @@ export const loadAMM = async (provider, chainId, dispatch) => {
   return amm
 }
 
+
 // ------------------------------------------------------------------------------
 // LOAD BALANCES & SHARES
 export const loadBalances = async (amm, tokens, account, dispatch) => {
@@ -74,4 +87,92 @@ export const loadBalances = async (amm, tokens, account, dispatch) => {
 
   const shares = await amm.shares(account)
   dispatch(sharesLoaded(ethers.utils.formatUnits(shares.toString(), 'ether')))
+}
+
+
+// ------------------------------------------------------------------------------
+// ADD LIQUDITY
+export const addLiquidity = async (provider, amm, tokens, amounts, dispatch) => {
+  try {
+    dispatch(depositRequest())
+
+    const signer = await provider.getSigner()
+
+    let transaction
+
+    transaction = await tokens[0].connect(signer).approve(amm.address, amounts[0])
+    await transaction.wait()
+
+    transaction = await tokens[1].connect(signer).approve(amm.address, amounts[1])
+    await transaction.wait()
+
+    transaction = await amm.connect(signer).addLiquidity(amounts[0], amounts[1])
+    await transaction.wait()
+
+    dispatch(depositSuccess(transaction.hash))
+  } catch (error) {
+    dispatch(depositFail())
+  }
+}
+
+// ------------------------------------------------------------------------------
+// REMOVE LIQUDITY
+export const removeLiquidity = async (provider, amm, shares, dispatch) => {
+  try {
+    dispatch(withdrawRequest())
+
+    const signer = await provider.getSigner()
+
+    let transaction = await amm.connect(signer).removeLiquidity(shares)
+    await transaction.wait()
+
+    dispatch(withdrawSuccess(transaction.hash))
+  } catch (error) {
+    dispatch(withdrawFail())
+  }
+}
+
+// ------------------------------------------------------------------------------
+// SWAP
+
+export const swap = async (provider, amm, token, symbol, amount, dispatch) => {
+  try {
+
+    dispatch(swapRequest()) // Tell Redux that the user is swapping so Spinner goes
+
+    let transaction
+
+    const signer = await provider.getSigner() // signer is the person connecting with MM.
+
+    transaction = await token.connect(signer).approve(amm.address, amount) // always have to approve the token each time to swap.
+    await transaction.wait()
+
+    if (symbol === "DAPP") {
+      transaction = await amm.connect(signer).swapToken1(amount)
+    } else {
+      transaction = await amm.connect(signer).swapToken2(amount)
+    }
+
+    await transaction.wait()
+
+    dispatch(swapSuccess(transaction.hash)) // Telling Redux that swap has finished and to stop the Spinner.
+
+  } catch (error) {
+    dispatch(swapFail()) // A function within Reducers that... ???
+  }
+}
+
+
+// ------------------------------------------------------------------------------
+// LOAD ALL SWAPS
+
+export const loadAllSwaps = async (provider, amm, dispatch) => {
+  const block = await provider.getBlockNumber()
+
+  const swapStream = await amm.queryFilter('Swap', 0, block)
+  const swaps = swapStream.map(event => {
+    return { hash: event.transactionHash, args: event.args }
+  })
+
+  dispatch(swapsLoaded(swaps))
 }
