@@ -162,7 +162,6 @@ export const swap = async (provider, amm, token, symbol, amount, dispatch) => {
   }
 }
 
-
 // ------------------------------------------------------------------------------
 // LOAD ALL SWAPS
 
