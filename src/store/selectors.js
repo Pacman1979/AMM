@@ -6,7 +6,7 @@ const swaps = state => state.amm.swaps
 export const chartSelector = createSelector(swaps, tokens, (swaps, tokens) => {
   if (!tokens[0] || !tokens[1]) { return }
 
-  // Filter swaps by selected tokens
+  // Filter (function in JS that lets us filter by the tokens we want) swaps by selected tokens
   swaps = swaps.filter((s) => s.args.tokenGet === tokens[0].address || s.args.tokenGet === tokens[1].address)
   swaps = swaps.filter((s) => s.args.tokenGive === tokens[0].address || s.args.tokenGive === tokens[1].address)
 
